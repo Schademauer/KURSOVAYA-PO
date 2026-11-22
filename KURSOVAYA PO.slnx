@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="CoffeeKurs.BLL/CoffeeKurs.BLL.csproj" />
+  <Project Path="CoffeeKurs.DAL/CoffeeKurs.DAL.csproj" />
+  <Project Path="CoffeeKurs.PL/CoffeeKurs.PL.csproj" />
+</Solution>
