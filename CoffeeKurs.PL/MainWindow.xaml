@@ -1,12 +1,441 @@
 ﻿<Window x:Class="CoffeeKurs.PL.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:CoffeeKurs.PL"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="Coffee House — Система заказов"
+        Height="820" Width="1100"
+        MinHeight="700" MinWidth="900"
+        WindowStartupLocation="CenterScreen"
+        Background="#F8F1E9"
+        FontFamily="Segoe UI"
+        Loaded="Window_Loaded">
 
+    <Window.Resources>
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#C17F59"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="24,13"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#A66B4A"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#EDE0D4"/>
+            <Setter Property="Foreground" Value="#4A3728"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="24,13"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#E0D0C0"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <!-- ==================== 0. ВХОД ==================== -->
+        <Grid x:Name="LoginView" Visibility="Collapsed">
+            <Border Background="#4A3728" Opacity="0.25"/>
+            <Border Background="White" CornerRadius="16" Width="420" Height="440"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="30" ShadowDepth="5" Opacity="0.2"/>
+                </Border.Effect>
+
+                <StackPanel Margin="40">
+                    <TextBlock Text="☕" FontSize="48" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Вход в систему" FontSize="24" FontWeight="SemiBold"
+                               Foreground="#4A3728" HorizontalAlignment="Center" Margin="0,8,0,28"/>
+
+                    <TextBlock Text="Логин" FontSize="13" Foreground="#8B7355" Margin="0,0,0,6"/>
+                    <TextBox x:Name="LoginBox" Height="42" FontSize="15" Padding="12,0"
+                             VerticalContentAlignment="Center" Margin="0,0,0,16"/>
+
+                    <TextBlock Text="Пароль" FontSize="13" Foreground="#8B7355" Margin="0,0,0,6"/>
+                    <PasswordBox x:Name="PasswordBox" Height="42" FontSize="15" Padding="12,0"
+                                 VerticalContentAlignment="Center" Margin="0,0,0,28"/>
+
+                    <Button Content="Войти" Style="{StaticResource PrimaryButton}"
+                            HorizontalAlignment="Stretch" Click="DoLogin_Click"/>
+
+                    <Button Content="Продолжить как гость" Margin="0,14,0,0"
+                            Background="Transparent" Foreground="#8B7355" BorderThickness="0"
+                            Cursor="Hand" FontSize="14" Click="ShowMenu_Click"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ==================== 1. МЕНЮ ==================== -->
+        <Grid x:Name="MenuView" Visibility="Visible">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="#4A3728" Padding="28,18">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="☕" FontSize="24" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <StackPanel>
+                            <TextBlock Text="Coffee House" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                            <TextBlock Text="на Арбате" Foreground="#EDE0D4" FontSize="13"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <TextBlock Grid.Column="1" Text="Меню" Foreground="White" FontSize="24" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock x:Name="UserInfoText" Text="Гость" Foreground="#EDE0D4"
+                                   FontSize="14" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                        <Button x:Name="LoginButton" Content="Войти" Background="#C17F59" Foreground="White"
+                                BorderThickness="0" Padding="18,9" Cursor="Hand" FontSize="13"
+                                Click="ShowLogin_Click">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="20,24,20,10">
+                <ItemsControl x:Name="ProductsList">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="4"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="White" CornerRadius="14" Margin="10" Height="250">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="14" ShadowDepth="3" Opacity="0.09" Color="#4A3728"/>
+                                </Border.Effect>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Border Grid.Row="0" Background="#EDE0D4" CornerRadius="14,14,0,0"/>
+                                    <StackPanel Grid.Row="1" Margin="16,12,16,8">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="17" Foreground="#4A3728"/>
+                                        <TextBlock Text="{Binding Price, StringFormat={}{0:0} ₽}" FontSize="15" Foreground="#C17F59" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <Button Grid.Row="2" Content="В корзину" Margin="12,0,12,14" Padding="0,9"
+                                            Background="#C17F59" Foreground="White" BorderThickness="0"
+                                            FontSize="13" FontWeight="SemiBold" Cursor="Hand"
+                                            Tag="{Binding}" Click="AddToCart_Click">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <Border Grid.Row="2" Background="White" Padding="28,18" BorderBrush="#EDE0D4" BorderThickness="0,1,0,0">
+                <Button Content="🛒  Перейти в корзину" Style="{StaticResource PrimaryButton}"
+                        HorizontalAlignment="Right" MinWidth="240" Click="ShowCart_Click"/>
+            </Border>
+        </Grid>
+
+        <!-- ==================== 2. КОРЗИНА ==================== -->
+        <Grid x:Name="CartView" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="#4A3728" Padding="28,18">
+                <Grid>
+                    <TextBlock Text="Корзина" Foreground="White" FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                    <Button Content="← В меню" HorizontalAlignment="Left" Background="Transparent" Foreground="#EDE0D4"
+                            BorderThickness="0" FontSize="15" Cursor="Hand" Click="ShowMenu_Click"/>
+                </Grid>
+            </Border>
+
+            <ScrollViewer Grid.Row="1" Margin="40,30,40,10" VerticalScrollBarVisibility="Auto">
+                <ItemsControl x:Name="CartList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="White" CornerRadius="14" Padding="20" Margin="0,0,0,16">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.08" Color="#4A3728"/>
+                                </Border.Effect>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Grid.Column="0" Width="70" Height="70" Background="#EDE0D4" CornerRadius="12" Margin="0,0,20,0"/>
+
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Product.Name}" FontWeight="SemiBold" FontSize="18" Foreground="#4A3728"/>
+                                        <TextBlock Text="{Binding IngredientsText}" FontSize="13" Foreground="#8B7355" Margin="0,3,0,0"/>
+                                        <TextBlock Text="{Binding TotalPrice, StringFormat={}{0:0} ₽}" FontSize="15" Foreground="#C17F59" Margin="0,4,0,0"/>
+                                    </StackPanel>
+
+                                    <Border Grid.Column="2" Background="#F8F1E9" CornerRadius="8" Padding="6,4" Margin="0,0,16,0" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Content="−" Width="32" Height="32" FontSize="16" Background="Transparent"
+                                                    BorderThickness="0" Cursor="Hand" Foreground="#4A3728"
+                                                    Tag="{Binding}" Click="DecreaseQuantity_Click"/>
+                                            <TextBlock Text="{Binding Quantity}" Width="30" TextAlignment="Center"
+                                                       VerticalAlignment="Center" FontSize="16" FontWeight="SemiBold" Foreground="#4A3728"/>
+                                            <Button Content="+" Width="32" Height="32" FontSize="16" Background="Transparent"
+                                                    BorderThickness="0" Cursor="Hand" Foreground="#4A3728"
+                                                    Tag="{Binding}" Click="IncreaseQuantity_Click"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Button Grid.Column="3" Content="Ингредиенты" Style="{StaticResource SecondaryButton}"
+                                            Padding="14,10" FontSize="13" Margin="0,0,12,0"
+                                            Tag="{Binding}" Click="EditIngredients_Click"/>
+
+                                    <Button Grid.Column="4" Content="✕" Background="Transparent" Foreground="#C17F59"
+                                            BorderThickness="0" FontSize="16" Cursor="Hand" VerticalAlignment="Center"
+                                            Tag="{Binding}" Click="RemoveFromCart_Click"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <Border Grid.Row="2" Background="White" Padding="40,20" BorderBrush="#EDE0D4" BorderThickness="0,1,0,0">
+                <Grid>
+                    <TextBlock x:Name="CartTotalText" VerticalAlignment="Center" FontSize="20" FontWeight="SemiBold" Foreground="#4A3728"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Отменить заказ" Style="{StaticResource SecondaryButton}" Margin="0,0,16,0" Click="CancelOrder_Click"/>
+                        <Button Content="Оплатить заказ" Style="{StaticResource PrimaryButton}" MinWidth="200" Click="ShowPayment_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ==================== 3. ИНГРЕДИЕНТЫ ==================== -->
+        <Grid x:Name="IngredientsView" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="#4A3728" Padding="28,18">
+                <Grid>
+                    <TextBlock x:Name="IngredientsTitle" Text="Настройка ингредиентов"
+                               Foreground="White" FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                    <Button Content="← Назад" HorizontalAlignment="Left" Background="Transparent" Foreground="#EDE0D4"
+                            BorderThickness="0" FontSize="15" Cursor="Hand" Click="ShowCart_Click"/>
+                </Grid>
+            </Border>
+
+            <ScrollViewer Grid.Row="1" Margin="80,40,80,10" VerticalScrollBarVisibility="Auto">
+                <ItemsControl x:Name="IngredientsList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="White" CornerRadius="14" Padding="22" Margin="0,0,0,14">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.08" Color="#4A3728"/>
+                                </Border.Effect>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Grid.Column="0" Width="48" Height="48" Background="#EDE0D4" CornerRadius="10" Margin="0,0,18,0"/>
+
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Ingredient.Name}" FontSize="17" FontWeight="Medium" Foreground="#4A3728"/>
+                                        <TextBlock Text="{Binding Ingredient.Price, StringFormat={}{0:0} ₽ / ед.}" FontSize="13" Foreground="#8B7355"/>
+                                    </StackPanel>
+
+                                    <Border Grid.Column="2" Background="#F8F1E9" CornerRadius="10" Padding="8,6">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Content="−" Width="36" Height="36" FontSize="18" Background="Transparent"
+                                                    BorderThickness="0" Cursor="Hand" Foreground="#4A3728"
+                                                    Tag="{Binding}" Click="IngredientMinus_Click"/>
+                                            <TextBlock Text="0" Width="40" TextAlignment="Center"
+                                                       VerticalAlignment="Center" FontSize="17" FontWeight="SemiBold" Foreground="#4A3728"/>
+                                            <Button Content="+" Width="36" Height="36" FontSize="18" Background="Transparent"
+                                                    BorderThickness="0" Cursor="Hand" Foreground="#4A3728"
+                                                    Tag="{Binding}" Click="IngredientPlus_Click"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <Border Grid.Row="2" Background="White" Padding="40,20" BorderBrush="#EDE0D4" BorderThickness="0,1,0,0">
+                <Button Content="Сохранить изменения" Style="{StaticResource PrimaryButton}"
+                        HorizontalAlignment="Right" Click="SaveIngredients_Click"/>
+            </Border>
+        </Grid>
+
+        <!-- ==================== 4. ОПЛАТА ==================== -->
+        <Grid x:Name="PaymentView" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="#4A3728" Padding="28,18">
+                <TextBlock Text="Оплата заказа" Foreground="White" FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+            </Border>
+
+            <Grid Grid.Row="1" Margin="60,40,60,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="40"/>
+                    <ColumnDefinition Width="380"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Состав заказа" FontSize="18" FontWeight="SemiBold" Foreground="#4A3728" Margin="0,0,0,16"/>
+
+                    <Border Background="White" CornerRadius="14" Padding="24" Margin="0,0,0,20">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.08" Color="#4A3728"/>
+                        </Border.Effect>
+                        <ItemsControl x:Name="PaymentItemsList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,14">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Product.Name}" FontSize="16" Foreground="#4A3728"/>
+                                            <TextBlock Text="{Binding IngredientsText}" FontSize="12" Foreground="#8B7355"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding TotalPrice, StringFormat={}{0:0} ₽}"
+                                                   HorizontalAlignment="Right" FontSize="16" Foreground="#C17F59"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
+
+                    <TextBlock Text="Комментарий к заказу" FontSize="15" Foreground="#4A3728" Margin="0,0,0,8"/>
+                    <Border Background="White" CornerRadius="14" Padding="4">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.08" Color="#4A3728"/>
+                        </Border.Effect>
+                        <TextBox x:Name="CommentBox" BorderThickness="0" Padding="16" FontSize="15"
+                                 TextWrapping="Wrap" AcceptsReturn="True" Height="100"
+                                 Background="Transparent" Foreground="#4A3728" MaxLength="50"/>
+                    </Border>
+                </StackPanel>
+
+                <Border Grid.Column="2" Background="White" CornerRadius="14" Padding="28" VerticalAlignment="Top">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.08" Color="#4A3728"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="Кофейня" FontSize="14" Foreground="#8B7355" Margin="0,0,0,4"/>
+                        <TextBlock Text="Coffee House на Арбате" FontSize="17" FontWeight="SemiBold"
+                                   Foreground="#4A3728" Margin="0,0,0,24"/>
+
+                        <Border Background="#F8F1E9" CornerRadius="10" Padding="18" Margin="0,0,0,24">
+                            <Grid>
+                                <TextBlock Text="Итого к оплате" FontSize="16" Foreground="#4A3728" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="PaymentTotalText" HorizontalAlignment="Right"
+                                           FontSize="24" FontWeight="Bold" Foreground="#C17F59"/>
+                            </Grid>
+                        </Border>
+
+                        <Button Content="Оплатить" Style="{StaticResource PrimaryButton}"
+                                HorizontalAlignment="Stretch" Margin="0,0,0,12" Click="Pay_Click"/>
+                        <Button Content="Вернуться в корзину" Style="{StaticResource SecondaryButton}"
+                                HorizontalAlignment="Stretch" Click="ShowCart_Click"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- ==================== 5. ПАНЕЛЬ АДМИНИСТРАТОРА ==================== -->
+        <Grid x:Name="AdminView" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="#4A3728" Padding="28,18">
+                <Grid>
+                    <TextBlock Text="Панель администратора" Foreground="White" FontSize="24" FontWeight="SemiBold"
+                               HorizontalAlignment="Center"/>
+                    <Button Content="Выйти" HorizontalAlignment="Right" Background="Transparent" Foreground="#EDE0D4"
+                            BorderThickness="0" FontSize="15" Cursor="Hand" Click="ShowLogin_Click"/>
+                </Grid>
+            </Border>
+
+            <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="🛠️" FontSize="64" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                <TextBlock Text="Добро пожаловать в панель управления" FontSize="22" FontWeight="SemiBold"
+                           Foreground="#4A3728" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                <TextBlock Text="Здесь вы можете формировать отчёты" FontSize="15" Foreground="#8B7355"
+                           HorizontalAlignment="Center" Margin="0,0,0,40"/>
+
+                <Button Content="📊  Сформировать отчёт по продажам" Style="{StaticResource PrimaryButton}"
+                        Width="360" Height="55" FontSize="16" Click="GenerateReport_Click"/>
+
+                <Button Content="Вернуться в меню" Style="{StaticResource SecondaryButton}"
+                        Width="360" Margin="0,16,0,0" Click="ShowMenu_Click"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>
