@@ -63,7 +63,11 @@ namespace CoffeeKurs.DAL
             modelBuilder.Entity<User>().Property(u => u.BonusPoints).HasColumnName("bonus_points");
             modelBuilder.Entity<User>().Property(u => u.BonusPointsActive).HasColumnName("bonus_points_active");
             modelBuilder.Entity<User>().Property(u => u.RegistrationDate).HasColumnName("registration_date");
-
+            modelBuilder.Entity<User>().Property(u => u.FirstName).HasColumnName("first_name");
+            modelBuilder.Entity<User>().Property(u => u.LastName).HasColumnName("last_name");
+            modelBuilder.Entity<User>().Property(u => u.Phone).HasColumnName("phone");
+            modelBuilder.Entity<User>().Property(u => u.Login).HasColumnName("login");
+            modelBuilder.Entity<User>().Property(u => u.PasswordHash).HasColumnName("password_hash");
             // ================= ЗАКАЗЫ =================
             modelBuilder.Entity<Order>().ToTable("orders");
             modelBuilder.Entity<Order>().HasKey(o => o.OrderId); // <--- ДОБАВЛЕНО (исправляет ошибку)

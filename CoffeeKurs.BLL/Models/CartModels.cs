@@ -35,15 +35,6 @@ namespace CoffeeKurs.BLL.Models
         }
     }
 
-    // DTO для клиента (чтобы не тащить пароль в интерфейс)
-    public class ClientDto
-    {
-        public int UserId { get; set; }
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public string Login { get; set; } = string.Empty;
-        public int BonusPoints { get; set; }
-    }
     public class ProductDto
     {
         public int ProductId { get; set; }

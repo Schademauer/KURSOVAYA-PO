@@ -13,8 +13,11 @@ namespace CoffeeKurs.PL
 {
     public partial class MainWindow : Window
     {
+        private readonly OrderService _orderService = new();
         // Создаем экземпляры наших сервисов
         private readonly ProductService _productService = new();
+        private readonly AuthService _authService = new();
+        private UserDto? _currentUser = null; // Текущий пользователь
         private readonly CartService _cartService = new();
 
         private CartItem currentEditingItem = null;
@@ -49,11 +52,18 @@ namespace CoffeeKurs.PL
 
         private void UpdateUserInfo()
         {
-            // Пока оставим заглушку, так как авторизацию еще не перенесли в BLL
-            UserInfoText.Text = "Гость";
-            LoginButton.Content = "Войти";
+            if (_currentUser != null)
+            {
+                UserInfoText.Text = _currentUser.DisplayName; // Выводим имя
+                LoginButton.Content = "Выйти";
+            }
+            else
+            {
+                UserInfoText.Text = "Гость";
+                LoginButton.Content = "Войти";
+            }
+        LoginButton.Content = "Войти";
         }
-
         // ==================== НАВИГАЦИЯ ====================
 
         private void ShowView(UIElement view)
@@ -96,9 +106,19 @@ namespace CoffeeKurs.PL
 
         private void ShowLogin_Click(object sender, RoutedEventArgs e)
         {
-            // Заглушка для выхода
-            MessageBox.Show("Вы вышли из аккаунта");
-            ShowView(MenuView);
+            if (_currentUser != null)
+            {
+                // Если пользователь авторизован — выходим
+                _currentUser = null;
+                UpdateUserInfo();
+                ShowView(MenuView);
+                MessageBox.Show("Вы вышли из аккаунта.");
+            }
+            else
+            {
+                // Если нет — показываем окно входа
+                ShowView(LoginView);
+            }
         }
 
         // ==================== КОРЗИНА ====================
@@ -179,15 +199,78 @@ namespace CoffeeKurs.PL
         // ==================== ОПЛАТА (Заглушка) ====================
         private void Pay_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Логика оплаты и сохранения заказа в БД будет добавлена на следующем этапе!", "В разработке");
+            if (_cartService.Cart.Count == 0)
+            {
+                MessageBox.Show("Корзина пуста.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                // Передаем корзину, комментарий и текущего пользователя
+                int orderId = _orderService.CreateOrder(
+                    _cartService.Cart.ToList(), 
+                    CommentBox.Text, 
+                    _currentUser
+                );
+
+                MessageBox.Show($"Заказ №{orderId} успешно оформлен!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                
+                // Очищаем корзину и возвращаемся в меню
+                _cartService.ClearCart();
+                CommentBox.Text = "";
+                ShowView(MenuView);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка при оформлении заказа:\n" + ex.Message, "Ошибка БД", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
-        // ==================== АВТОРИЗАЦИЯ (Заглушка) ====================
+        // ==================== АВТОРИЗАЦИЯ ====================
         private void DoLogin_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Логика авторизации будет добавлена на следующем этапе!", "В разработке");
-        }
+            string login = LoginBox.Text.Trim();
+            string password = PasswordBox.Password;
 
+            if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password))
+            {
+                MessageBox.Show("Пожалуйста, введите логин и пароль.");
+                return;
+            }
+
+            try
+            {
+                var user = _authService.Login(login, password);
+
+                if (user != null)
+                {
+                    // 1. СНАЧАЛА присваиваем пользователя
+                    _currentUser = user;
+
+                    // 2. ПОТОМ обновляем интерфейс (и кнопка поменяется!)
+                    UpdateUserInfo();
+                    LoginButton.Content = "Выйти";
+                    MessageBox.Show($"Добро пожаловать, {user.FirstName}!");
+
+                    LoginBox.Text = "";
+                    PasswordBox.Password = "";
+
+                    if (user.IsAdmin)
+                        ShowView(AdminView);
+                    else
+                        ShowView(MenuView);
+                }
+                else
+                {
+                    MessageBox.Show("Неверный логин или пароль.");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка при авторизации:\n" + ex.Message);
+            }
+        }
         private void GenerateReport_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show("Логика отчета будет добавлена на следующем этапе!", "В разработке");
