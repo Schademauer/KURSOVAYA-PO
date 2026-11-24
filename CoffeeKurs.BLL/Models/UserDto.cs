@@ -12,8 +12,6 @@ namespace CoffeeKurs.BLL.Models
         public string? Login { get; set; }
         public int BonusPoints { get; set; }
         public bool IsAdmin { get; set; }
-
-        // Удобное свойство для отображения в интерфейсе
         public string DisplayName => $"{FirstName} {LastName}".Trim();
     }
 }

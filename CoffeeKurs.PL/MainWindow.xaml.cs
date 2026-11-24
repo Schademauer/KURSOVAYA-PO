@@ -14,7 +14,6 @@ namespace CoffeeKurs.PL
     public partial class MainWindow : Window
     {
         private readonly OrderService _orderService = new();
-        // Создаем экземпляры наших сервисов
         private readonly ProductService _productService = new();
         private readonly AuthService _authService = new();
         private UserDto? _currentUser = null; // Текущий пользователь
@@ -38,8 +37,8 @@ namespace CoffeeKurs.PL
         {
             try
             {
-                // Используем сервис из BLL
-                ProductsList.ItemsSource = _productService.GetAllAvailableProducts();
+
+                ProductsList.ItemsSource = _productService.GetAllAvailableProducts();//для отображения меню 
             }
             catch (Exception ex)
             {
@@ -48,13 +47,12 @@ namespace CoffeeKurs.PL
             }
         }
 
-        // ... (Метод UpdateUserInfo оставляем без изменений, он работает с UI)
 
-        private void UpdateUserInfo()
+        private void UpdateUserInfo() //Для отображения в шапке пользощвателя, его имени и кнопок
         {
             if (_currentUser != null)
             {
-                UserInfoText.Text = _currentUser.DisplayName; // Выводим имя
+                UserInfoText.Text = _currentUser.DisplayName;
                 LoginButton.Content = "Выйти";
             }
             else
@@ -64,8 +62,13 @@ namespace CoffeeKurs.PL
             }
         LoginButton.Content = "Войти";
         }
-        // ==================== НАВИГАЦИЯ ====================
+        //НАВИГАЦИЯ 
 
+        /// <summary>
+        /// Функция для показа представлений
+        /// 
+        /// </summary>
+        /// <param name="view"></param>
         private void ShowView(UIElement view)
         {
             LoginView.Visibility = Visibility.Collapsed;
@@ -90,25 +93,16 @@ namespace CoffeeKurs.PL
             ShowView(CartView);
         }
 
-        private void ShowPayment_Click(object sender, RoutedEventArgs e)
-        {
-            if (_cartService.Cart.Count == 0)
-            {
-                MessageBox.Show("Корзина пуста");
-                return;
-            }
-
-            PaymentItemsList.ItemsSource = null;
-            PaymentItemsList.ItemsSource = _cartService.Cart.ToList();
-            PaymentTotalText.Text = $"{_cartService.GetCartTotal():0} ₽";
-            ShowView(PaymentView);
-        }
-
-        private void ShowLogin_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Функция для кнопки в шапке для входа пользователя
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ShowLogin_Click(object sender, RoutedEventArgs e)//кнопка в шапке для входа пользователя
         {
             if (_currentUser != null)
             {
-                // Если пользователь авторизован — выходим
+                // авторизован? Да ВЫХОД
                 _currentUser = null;
                 UpdateUserInfo();
                 ShowView(MenuView);
@@ -116,12 +110,12 @@ namespace CoffeeKurs.PL
             }
             else
             {
-                // Если нет — показываем окно входа
+                //НЕТ _ форма входа
                 ShowView(LoginView);
             }
         }
 
-        // ==================== КОРЗИНА ====================
+        // КОРЗИНА 
 
         private void RefreshCart()
         {
@@ -134,7 +128,7 @@ namespace CoffeeKurs.PL
         {
             if (sender is Button btn && btn.Tag is ProductDto product)
             {
-                _cartService.AddToCart(product); // Используем сервис
+                _cartService.AddToCart(product);
                 btn.Content = "В корзине";
                 btn.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#A66B4A"));
             }
@@ -177,7 +171,7 @@ namespace CoffeeKurs.PL
             LoadProducts();
         }
 
-        // ==================== ИНГРЕДИЕНТЫ ====================
+        //  ИНГРЕДИЕНТЫ 
 
         private void EditIngredients_Click(object sender, RoutedEventArgs e)
         {
@@ -196,7 +190,73 @@ namespace CoffeeKurs.PL
                 ShowView(IngredientsView);
             }
         }
-        // ==================== ОПЛАТА (Заглушка) ====================
+        //  ОПЛАТА 
+        private void ShowPayment_Click(object sender, RoutedEventArgs e)
+        {
+            if (_cartService.Cart.Count == 0)
+            {
+                MessageBox.Show("Корзина пуста");
+                return;
+            }
+
+            PaymentItemsList.ItemsSource = null;
+            PaymentItemsList.ItemsSource = _cartService.Cart.ToList();
+
+            decimal total = _cartService.GetCartTotal();
+            PaymentTotalText.Text = $"{total:0} ₽";
+            FinalPaymentText.Text = $"{total:0} ₽";
+
+            if (_currentUser != null && _currentUser.BonusPoints > 0)
+            {
+                BonusPanel.Visibility = Visibility.Visible;
+                int maxBonus = _cartService.GetMaxAvailableBonus(_currentUser);
+                MaxBonusText.Text = $"(Доступно: {maxBonus})";
+                UseBonusCheckBox.IsChecked = false;
+                BonusInputGrid.Visibility = Visibility.Collapsed;
+                BonusInput.Text = "0";
+            }
+            else
+            {
+                BonusPanel.Visibility = Visibility.Collapsed;
+            }
+
+            ShowView(PaymentView);
+        }
+
+        private void UseBonusCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            BonusInputGrid.Visibility = Visibility.Visible;
+            BonusInput.Text = _cartService.GetMaxAvailableBonus(_currentUser).ToString();
+        }
+
+        private void UseBonusCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            BonusInputGrid.Visibility = Visibility.Collapsed;
+            BonusInput.Text = "0";
+            UpdateFinalPaymentText();
+        }
+
+        private void BonusInput_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateFinalPaymentText();
+        }
+
+        private void UpdateFinalPaymentText()
+        {
+            decimal total = _cartService.GetCartTotal();
+            int bonusToUse = 0;
+
+            if (UseBonusCheckBox.IsChecked == true && int.TryParse(BonusInput.Text, out int inputBonus))
+            {
+                int maxBonus = _cartService.GetMaxAvailableBonus(_currentUser);
+                bonusToUse = Math.Min(inputBonus, maxBonus);
+                bonusToUse = Math.Min(bonusToUse, (int)total);
+            }
+
+            decimal final = total - bonusToUse;
+            FinalPaymentText.Text = $"{final:0} ₽";
+        }
+
         private void Pay_Click(object sender, RoutedEventArgs e)
         {
             if (_cartService.Cart.Count == 0)
@@ -205,29 +265,41 @@ namespace CoffeeKurs.PL
                 return;
             }
 
+            int bonusToUse = 0;
+            if (UseBonusCheckBox.IsChecked == true && int.TryParse(BonusInput.Text, out int inputBonus))
+            {
+                bonusToUse = Math.Min(inputBonus, _cartService.GetMaxAvailableBonus(_currentUser));
+            }
+
             try
             {
-                // Передаем корзину, комментарий и текущего пользователя
                 int orderId = _orderService.CreateOrder(
-                    _cartService.Cart.ToList(), 
-                    CommentBox.Text, 
-                    _currentUser
+                    _cartService.Cart.ToList(),
+                    CommentBox.Text,
+                    _currentUser,
+                    bonusToUse
                 );
 
+                if (_currentUser != null)
+                {
+                    _currentUser = _authService.GetUserById(_currentUser.UserId);
+                    UpdateUserInfo();
+                }
+
                 MessageBox.Show($"Заказ №{orderId} успешно оформлен!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-                
-                // Очищаем корзину и возвращаемся в меню
+
                 _cartService.ClearCart();
                 CommentBox.Text = "";
                 ShowView(MenuView);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ошибка при оформлении заказа:\n" + ex.Message, "Ошибка БД", MessageBoxButton.OK, MessageBoxImage.Error);
+                string errorMsg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                MessageBox.Show("Ошибка при оформлении заказа:\n" + errorMsg, "Ошибка БД", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        // ==================== АВТОРИЗАЦИЯ ====================
+        //  АВТОРИЗАЦИЯ 
         private void DoLogin_Click(object sender, RoutedEventArgs e)
         {
             string login = LoginBox.Text.Trim();
@@ -245,10 +317,10 @@ namespace CoffeeKurs.PL
 
                 if (user != null)
                 {
-                    // 1. СНАЧАЛА присваиваем пользователя
+                    
                     _currentUser = user;
 
-                    // 2. ПОТОМ обновляем интерфейс (и кнопка поменяется!)
+                    
                     UpdateUserInfo();
                     LoginButton.Content = "Выйти";
                     MessageBox.Show($"Добро пожаловать, {user.FirstName}!");
@@ -275,7 +347,7 @@ namespace CoffeeKurs.PL
         {
             MessageBox.Show("Логика отчета будет добавлена на следующем этапе!", "В разработке");
         }
-        // ==================== ИНГРЕДИЕНТЫ (Логика UI) ====================
+        // ИНГРЕДИЕНТЫ 
 
         private void IngredientPlus_Click(object sender, RoutedEventArgs e)
         {
@@ -323,8 +395,8 @@ namespace CoffeeKurs.PL
                 {
                     currentEditingItem.Ingredients.Add(new SelectedIngredient
                     {
-                        Ingredient = pi.Ingredient, // Тут используется Ingredient из DAL, 
-                                                    // так как мы его подтягиваем через BLL
+                        Ingredient = pi.Ingredient,  
+                                                    
                         Count = kv.Value
                     });
                 }
@@ -334,6 +406,5 @@ namespace CoffeeKurs.PL
             RefreshCart();
             ShowView(CartView);
         }
-        // Остальные методы (IngredientPlus_Click, IngredientMinus_Click, UpdateCountText, SaveIngredients_Click) оставляем без изменений, они работают с UI
     }
 }

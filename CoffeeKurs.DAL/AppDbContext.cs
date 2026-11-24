@@ -80,20 +80,41 @@ namespace CoffeeKurs.DAL
             modelBuilder.Entity<Order>().Property(o => o.BonusPointsUsed).HasColumnName("bonus_points_used");
             modelBuilder.Entity<Order>().Property(o => o.BonusPointsEarned).HasColumnName("bonus_points_earned");
             modelBuilder.Entity<Order>().Property(o => o.FinalAmount).HasColumnName("final_amount");
-
+            modelBuilder.Entity<Order>().Property(o => o.Comment).HasColumnName("comment");
             // ================= ПОЗИЦИИ В ЗАКАЗАХ =================
             modelBuilder.Entity<OrderProduct>().ToTable("order_products");
             modelBuilder.Entity<OrderProduct>().HasKey(op => op.OrderItemId); // <--- ДОБАВЛЕНО (исправляет ошибку)
             modelBuilder.Entity<OrderProduct>().Property(op => op.OrderItemId).HasColumnName("order_item_id");
             modelBuilder.Entity<OrderProduct>().Property(op => op.OrderId).HasColumnName("order_id");
             modelBuilder.Entity<OrderProduct>().Property(op => op.ProductId).HasColumnName("product_id");
-
+            modelBuilder.Entity<OrderProduct>().Property(op => op.Quantity).HasColumnName("quantity");
+            modelBuilder.Entity<OrderProduct>().Property(op => op.Price).HasColumnName("price");
             // ================= ИНГРЕДИЕНТЫ В ЗАКАЗАХ =================
             modelBuilder.Entity<OrderItemIngredient>().ToTable("order_item_ingredients");
             modelBuilder.Entity<OrderItemIngredient>().HasKey(oii => new { oii.OrderItemId, oii.IngredientId }); // Составной ключ
             modelBuilder.Entity<OrderItemIngredient>().Property(oii => oii.OrderItemId).HasColumnName("order_item_id");
             modelBuilder.Entity<OrderItemIngredient>().Property(oii => oii.IngredientId).HasColumnName("ingredient_id");
             modelBuilder.Entity<OrderItemIngredient>().Property(oii => oii.PriceAtPurchase).HasColumnName("price_at_purchase");
+            modelBuilder.Entity<OrderItemIngredient>().Property(oii => oii.Quantity).HasColumnName("quantity");
+            // ================= НАСТРОЙКА СВЯЗЕЙ =================
+
+            // 1. Заказ -> Позиции заказа (Один ко многим)
+            modelBuilder.Entity<OrderProduct>()
+                .HasOne(op => op.Order)
+                .WithMany(o => o.OrderProducts)
+                .HasForeignKey(op => op.OrderId);
+
+            // 2. Позиция заказа -> Ингредиенты (Один ко многим)
+            modelBuilder.Entity<OrderItemIngredient>()
+                .HasOne(oii => oii.OrderProduct)
+                .WithMany(op => op.OrderItemIngredients)
+                .HasForeignKey(oii => oii.OrderItemId);
+
+            // 3. Позиция заказа -> Продукт (Один ко многим)
+            modelBuilder.Entity<OrderProduct>()
+                .HasOne(op => op.Product)
+                .WithMany()
+                .HasForeignKey(op => op.ProductId);
         }
     }
 }

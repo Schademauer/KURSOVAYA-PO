@@ -6,6 +6,7 @@ namespace CoffeeKurs.BLL.Services
 {
     public class ProductService
     {
+        //для отображения меню
         public List<ProductDto> GetAllAvailableProducts()
         {
             using var context = new AppDbContext();
@@ -27,10 +28,9 @@ namespace CoffeeKurs.BLL.Services
             using var context = new AppDbContext();
 
             return context.ProductIngredients
-                .Include(pi => pi.Ingredient) // Жадная загрузка: подтягиваем данные ингредиента
+                .Include(pi => pi.Ingredient)
                 .Where(pi => pi.ProductId == productId && pi.Ingredient!.IsAvailable == true)
-                //.OrderBy(pi => pi.IsOptional) // <--- УДАЛИ ЭТУ СТРОКУ (или закомментируй)
-                .OrderBy(pi => pi.Ingredient!.Name) // Сортировка по имени
+                .OrderBy(pi => pi.Ingredient!.Name) 
                 .ToList();
         }
     }

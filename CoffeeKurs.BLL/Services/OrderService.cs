@@ -6,38 +6,49 @@ namespace CoffeeKurs.BLL.Services
 {
     public class OrderService
     {
-        // Метод принимает корзину, комментарий и текущего пользователя (если он есть)
-        public int CreateOrder(List<CartItem> cart, string comment, UserDto? currentUser)
+        public int CreateOrder(List<CartItem> cart, string comment, UserDto? currentUser, int bonusPointsToUse)
         {
             if (cart == null || cart.Count == 0)
                 throw new Exception("Корзина пуста.");
 
             using var context = new AppDbContext();
-
-            // Начинаем транзакцию (чтобы всё сохранилось разом или не сохранилось вообще)
             using var transaction = context.Database.BeginTransaction();
 
             try
             {
-                // 1. Создаем сам заказ (Orders)
                 var totalAmount = cart.Sum(c => c.TotalPrice);
+                int actualBonusUsed = 0;
+                User? dbUser = null;
+
+                if (currentUser != null && bonusPointsToUse > 0)
+                {
+                    dbUser = context.Users.Find(currentUser.UserId);
+                    if (dbUser != null && dbUser.BonusPoints >= bonusPointsToUse)
+                    {
+                        actualBonusUsed = bonusPointsToUse;
+                        dbUser.BonusPoints -= actualBonusUsed;
+                    }
+                }
+
+                var finalAmount = totalAmount - actualBonusUsed;
+                if (finalAmount < 0) finalAmount = 0;
+
                 var order = new Order
                 {
-                    ClientId = currentUser?.UserId, // Если гость - null
-                    StatusId = 1, // 1 - "created" (создан)
+                    ClientId = currentUser?.UserId,
+                    StatusId = 1,
                     TotalAmount = totalAmount,
                     Comment = comment,
                     CreatedDate = DateOnly.FromDateTime(DateTime.Now),
                     CreatedTime = TimeOnly.FromDateTime(DateTime.Now),
-                    FinalAmount = totalAmount, // Пока без списания бонусов
-                    BonusPointsUsed = 0,
+                    FinalAmount = finalAmount,
+                    BonusPointsUsed = actualBonusUsed,
                     BonusPointsEarned = 0
                 };
 
                 context.Orders.Add(order);
-                context.SaveChanges(); // Сохраняем, чтобы получить OrderId
+                context.SaveChanges();
 
-                // 2. Добавляем позиции заказа (Order_products)
                 foreach (var item in cart)
                 {
                     var orderProduct = new OrderProduct
@@ -45,13 +56,12 @@ namespace CoffeeKurs.BLL.Services
                         OrderId = order.OrderId,
                         ProductId = item.Product.ProductId,
                         Quantity = item.Quantity,
-                        Price = item.UnitPrice // Цена на момент заказа
+                        Price = item.UnitPrice
                     };
 
                     context.OrderProducts.Add(orderProduct);
-                    context.SaveChanges(); // Сохраняем, чтобы получить OrderItemId
+                    context.SaveChanges();
 
-                    // 3. Добавляем кастомизацию (ингредиенты) для этой позиции
                     foreach (var ing in item.Ingredients)
                     {
                         var orderItemIngredient = new OrderItemIngredient
@@ -65,25 +75,20 @@ namespace CoffeeKurs.BLL.Services
                     }
                 }
 
-                // Начисляем бонусы (например, 5% от суммы) если пользователь авторизован
-                if (currentUser != null)
+                if (currentUser != null && dbUser != null)
                 {
-                    var user = context.Users.Find(currentUser.UserId);
-                    if (user != null)
-                    {
-                        int earned = (int)(totalAmount * 0.05m); // 5% бонусов
-                        user.BonusPoints += earned;
-                        order.BonusPointsEarned = earned;
-                        context.SaveChanges();
-                    }
+                    int earned = (int)(finalAmount * 0.10m);
+                    dbUser.BonusPoints += earned;
+                    order.BonusPointsEarned = earned;
+                    context.SaveChanges();
                 }
 
-                transaction.Commit(); // Фиксируем все изменения
-                return order.OrderId; // Возвращаем номер заказа
+                transaction.Commit();
+                return order.OrderId;
             }
             catch (Exception)
             {
-                transaction.Rollback(); // Если ошибка - откатываем всё
+                transaction.Rollback();
                 throw;
             }
         }

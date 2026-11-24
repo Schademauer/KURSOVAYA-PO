@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-using CoffeeKurs.DAL; // Ссылаемся на слой данных, чтобы использовать Product и Ingredient
+using CoffeeKurs.DAL; 
 
 namespace CoffeeKurs.BLL.Models
 {
