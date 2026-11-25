@@ -7,9 +7,10 @@ namespace CoffeeKurs.BLL.Services
     public class ProductService
     {
         //для отображения меню
-        public List<ProductDto> GetAllAvailableProducts()
+        public List<ProductDto> GetAllAvailableProducts(bool isGuest)
         {
             using var context = new AppDbContext();
+
             return context.Products
                 .Where(p => p.IsAvailable == true)
                 .OrderBy(p => p.ProductId)
@@ -18,7 +19,8 @@ namespace CoffeeKurs.BLL.Services
                     ProductId = p.ProductId,
                     Name = p.Name,
                     Price = p.Price,
-                    Description = p.Description
+                    Description = p.Description,
+                    CanBuy = !isGuest
                 })
                 .ToList();
         }

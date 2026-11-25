@@ -60,7 +60,7 @@
     </Window.Resources>
 
     <Grid>
-        <!--  0. ВХОД --!>
+        <!--  0. ВХОД -->
         <Grid x:Name="LoginView" Visibility="Collapsed">
             <Border Background="#4A3728" Opacity="0.25"/>
             <Border Background="White" CornerRadius="16" Width="420" Height="440"
@@ -162,9 +162,19 @@
                                         <TextBlock Text="{Binding Price, StringFormat={}{0:0} ₽}" FontSize="15" Foreground="#C17F59" Margin="0,4,0,0"/>
                                     </StackPanel>
                                     <Button Grid.Row="2" Content="В корзину" Margin="12,0,12,14" Padding="0,9"
-                                            Background="#C17F59" Foreground="White" BorderThickness="0"
-                                            FontSize="13" FontWeight="SemiBold" Cursor="Hand"
-                                            Tag="{Binding}" Click="AddToCart_Click">
+        Background="#C17F59" Foreground="White" BorderThickness="0"
+        FontSize="13" FontWeight="SemiBold" Cursor="Hand"
+        Tag="{Binding}" Click="AddToCart_Click">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding CanBuy}" Value="False">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
                                                 <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">

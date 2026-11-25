@@ -37,8 +37,8 @@ namespace CoffeeKurs.PL
         {
             try
             {
-
-                ProductsList.ItemsSource = _productService.GetAllAvailableProducts();//для отображения меню 
+                bool isGuest = _currentUser == null;
+                ProductsList.ItemsSource = _productService.GetAllAvailableProducts(isGuest);//для отображения меню 
             }
             catch (Exception ex)
             {
@@ -105,11 +105,13 @@ namespace CoffeeKurs.PL
                 // авторизован? Да ВЫХОД
                 _currentUser = null;
                 UpdateUserInfo();
+                LoadProducts();
                 ShowView(MenuView);
                 MessageBox.Show("Вы вышли из аккаунта.");
             }
             else
             {
+                
                 //НЕТ _ форма входа
                 ShowView(LoginView);
             }
@@ -331,7 +333,8 @@ namespace CoffeeKurs.PL
                     if (user.IsAdmin)
                         ShowView(AdminView);
                     else
-                        ShowView(MenuView);
+                    LoadProducts();
+                    ShowView(MenuView);
                 }
                 else
                 {
