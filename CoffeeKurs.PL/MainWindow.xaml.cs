@@ -60,7 +60,7 @@ namespace CoffeeKurs.PL
                 UserInfoText.Text = "Гость";
                 LoginButton.Content = "Войти";
             }
-        LoginButton.Content = "Войти";
+
         }
         //НАВИГАЦИЯ 
 
@@ -292,7 +292,12 @@ namespace CoffeeKurs.PL
 
                 _cartService.ClearCart();
                 CommentBox.Text = "";
+
+                UpdateUserInfo();
                 ShowView(MenuView);
+
+
+
             }
             catch (Exception ex)
             {
