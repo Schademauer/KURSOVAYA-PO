@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-
-using CoffeeKurs.DAL; 
+using System.ComponentModel;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using CoffeeKurs.DAL;
 
 namespace CoffeeKurs.BLL.Models
 {
@@ -13,11 +14,30 @@ namespace CoffeeKurs.BLL.Models
         public decimal Total => Ingredient.Price * Count;
     }
 
-    public class CartItem
+    public class CartItem : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
         public Guid Id { get; set; } = Guid.NewGuid();
         public ProductDto Product { get; set; } = null!;
-        public int Quantity { get; set; } = 1;
+
+        private int _quantity = 1;
+        public int Quantity
+        {
+            get => _quantity;
+            set
+            {
+                if (_quantity == value) return;
+                _quantity = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(TotalPrice));
+                OnPropertyChanged(nameof(IngredientsText));
+            }
+        }
+
         public List<SelectedIngredient> Ingredients { get; set; } = new();
 
         public decimal UnitPrice => Product.Price + Ingredients.Sum(i => i.Total);
@@ -29,19 +49,44 @@ namespace CoffeeKurs.BLL.Models
             {
                 if (Ingredients == null || !Ingredients.Any(i => i.Count > 0))
                     return "Классический";
-                return string.Join(", ", Ingredients.Where(i => i.Count > 0)
+
+                return string.Join(", ", Ingredients
+                    .Where(i => i.Count > 0)
                     .Select(i => $"{i.Ingredient.Name} ×{i.Count}"));
             }
         }
+
+        // Вызывать после изменения списка ингредиентов
+        public void NotifyIngredientsChanged()
+        {
+            OnPropertyChanged(nameof(UnitPrice));
+            OnPropertyChanged(nameof(TotalPrice));
+            OnPropertyChanged(nameof(IngredientsText));
+        }
     }
 
-    public class ProductDto
+    public class ProductDto : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
         public int ProductId { get; set; }
         public string Name { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public string Description { get; set; } = string.Empty;
 
-        public bool CanBuy { get; set; } = true;
+        private bool _canBuy = true;
+        public bool CanBuy
+        {
+            get => _canBuy;
+            set
+            {
+                if (_canBuy == value) return;
+                _canBuy = value;
+                OnPropertyChanged();
+            }
+        }
     }
 }
